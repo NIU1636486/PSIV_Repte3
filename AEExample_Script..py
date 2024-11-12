@@ -33,6 +33,8 @@ import torch
 ## Own Functions
 from Models.AEmodels import AutoEncoderCNN
 
+from loadCropped import loadCropped
+
 
 def AEConfigs(Config):
     
@@ -73,13 +75,26 @@ inputmodule_paramsEnc['num_input_channels']=3
 
 # 0.1 NETWORK TRAINING PARAMS
 net_paramsEnc,net_paramsDec,inputmodule_paramsDec = AEConfigs('1')
+criterion = nn.MSELoss()  # Reconstruction loss for AutoEncoder
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+num_epochs = 50
+learning_rate = 1e-3
+batch_size = 16
+
+
 
 # 0.2 FOLDERS
 
 
 
+
+
+
+
 #### 1. LOAD DATA
 # 1.1 Patient Diagnosis
+
+
 
 
 # 1.2 Patches Data
@@ -106,10 +121,32 @@ net_paramsEnc,net_paramsDec,inputmodule_paramsDec = AEConfigs('1')
 
 ###### CONFIG1
 Config='1'
-net_paramsEnc,net_paramsDec,inputmodule_paramsDec=AEConfigs(Config)
 model=AutoEncoderCNN(inputmodule_paramsEnc, net_paramsEnc,
                      inputmodule_paramsDec, net_paramsDec)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
+
 # 4.2 Model Training
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    for batch in train_loader:
+        batch = batch.to(device)
+        
+        # Forward pass
+        outputs = model(batch)
+        loss = criterion(outputs, batch)
+        
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
+    
+    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss / len(train_loader)}")
+
+
 
 # Free GPU Memory After Training
 gc.collect()

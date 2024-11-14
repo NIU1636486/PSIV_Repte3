@@ -17,12 +17,12 @@ def loadAnnotated(ListFolders, nImages):
     excel = pd.read_excel(pathExcel)
     # ELIMINAR SI WINDOW ID CONTE number_Aug???
     excel = excel[~excel['Window_ID'].astype(str).str.contains('_Aug', regex=False)]
-    
     # nomes numerics i passar-los a integer per no llegir-los com a float
     excel = excel[excel['Window_ID'].apply(lambda x: str(x).isdigit())]
     excel['Window_ID'] = excel['Window_ID'].astype(int)
     
     annotatedImgs = []
+    annotatedtMeta= []
     
     for pathDir in ListFolders:
         # extreure Pat_ID i Section_ID del nom de la carpeta
@@ -50,11 +50,7 @@ def loadAnnotated(ListFolders, nImages):
 
             # Convert the numeric part to an integer
             img_window_id = int(match.group(1))
-
-            # Debugging 
-            #print(f"Checking image '{img_filename}.png' with extracted Window_ID: {img_window_id}")
-            #print("Available Window_IDs in folder data:", folder_data['Window_ID'].tolist())
-
+            
             # fer match Window_ID amb folder data
             presence_row = folder_data[folder_data['Window_ID'] == img_window_id]
             if presence_row.empty:
@@ -64,16 +60,17 @@ def loadAnnotated(ListFolders, nImages):
             #extreure valor presence
             presence = presence_row['Presence'].values[0]
 
-            # Crear metadata
-            metadates = [pat_id, img_window_id, presence]
-            annotatedImgs.append([img, metadates])
+            #afegir a les dues llistes
+            annotatedImgs.append(img)
+            annotatedtMeta.append([pat_id, img_window_id, presence])
 
-    return annotatedImgs
+    return annotatedImgs, annotatedtMeta
 
 ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
 
-results = loadAnnotated(ListFolders, nImages=2)
+patientsImgs, patientsMeta  = loadAnnotated(ListFolders, nImages=2)
 
 # Print the results for verification
-for img, metadata in results:
-    print("Metadata:", metadata)
+#for img, metadata in zip(patientsImgs, patientsMeta):
+    #print(img)
+    #print("Metadata:", metadata)

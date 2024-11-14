@@ -76,7 +76,6 @@ inputmodule_paramsEnc['num_input_channels']=3
 # 0.1 NETWORK TRAINING PARAMS
 net_paramsEnc,net_paramsDec,inputmodule_paramsDec = AEConfigs('1')
 criterion = nn.MSELoss()  # Reconstruction loss for AutoEncoder
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 num_epochs = 50
 learning_rate = 1e-3
 batch_size = 16
@@ -93,17 +92,31 @@ batch_size = 16
 
 #### 1. LOAD DATA
 # 1.1 Patient Diagnosis
+x, y = loadCropped(pathDir, 2)
+
+dataset = Standard_Dataset(X=x, Y=y)
+
+dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
+
 
 
 
 
 # 1.2 Patches Data
 
+
+
+
 #### 2. DATA SPLITING INTO INDEPENDENT SETS
 
 # 2.0 Annotated set for FRed optimal threshold
 
+
 # 2.1 AE trainnig set
+
+
+
+
 
 # 2.1 Diagosis crossvalidation set
 
@@ -117,7 +130,7 @@ batch_size = 16
 # CASES.
 
 # 4.1 Data Split
-
+train_loader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
 
 ###### CONFIG1
 Config='1'
@@ -125,6 +138,7 @@ model=AutoEncoderCNN(inputmodule_paramsEnc, net_paramsEnc,
                      inputmodule_paramsDec, net_paramsDec)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # 4.2 Model Training
 for epoch in range(num_epochs):
@@ -149,15 +163,15 @@ for epoch in range(num_epochs):
 
 
 # Free GPU Memory After Training
-gc.collect()
 torch.cuda.empty_cache()
+gc.collect()
 #### 5. AE RED METRICS THRESHOLD LEARNING
 
 ## 5.1 AE Model Evaluation
 
 # Free GPU Memory After Evaluation
-gc.collect()
 torch.cuda.empty_cache()
+gc.collect()
 
 ## 5.2 RedMetrics Threshold 
 

@@ -15,7 +15,7 @@ from torch import Tensor
 from collections import OrderedDict
 from numpy.matlib import repmat
 
-from models_init import *
+from Models.models_init import *
 from FC_Networks import OneShotTriplet_NN
 
 

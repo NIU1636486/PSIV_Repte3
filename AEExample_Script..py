@@ -36,18 +36,23 @@ from Models.AEmodels import AutoEncoderCNN
 from loadCropped import loadCropped
 
 
+net_paramsEnc = {"drop_rate": 0}
+net_paramsDec = {}
+inputmodule_paramsDec = {}
 def AEConfigs(Config):
-    
+
     if Config=='1':
         # CONFIG1
         net_paramsEnc['block_configs']=[[32,32],[64,64]]
         net_paramsEnc['stride']=[[1,2],[1,2]]
         net_paramsDec['block_configs']=[[64,32],[32,inputmodule_paramsEnc['num_input_channels']]]
         net_paramsDec['stride']=net_paramsEnc['stride']
+        net_paramsEnc["drop_rate"] = 0.2
+        net_paramsDec["drop_rate"] = 0.2
         inputmodule_paramsDec['num_input_channels']=net_paramsEnc['block_configs'][-1][-1]
-     
 
-        
+
+
     elif Config=='2':
         # CONFIG 2
         net_paramsEnc['block_configs']=[[32],[64],[128],[256]]
@@ -55,16 +60,16 @@ def AEConfigs(Config):
         net_paramsDec['block_configs']=[[128],[64],[32],[inputmodule_paramsEnc['num_input_channels']]]
         net_paramsDec['stride']=net_paramsEnc['stride']
         inputmodule_paramsDec['num_input_channels']=net_paramsEnc['block_configs'][-1][-1]
-   
-        
-    elif Config=='3':  
+
+
+    elif Config=='3':
         # CONFIG3
         net_paramsEnc['block_configs']=[[32],[64],[64]]
         net_paramsEnc['stride']=[[1],[2],[2]]
         net_paramsDec['block_configs']=[[64],[32],[inputmodule_paramsEnc['num_input_channels']]]
         net_paramsDec['stride']=net_paramsEnc['stride']
         inputmodule_paramsDec['num_input_channels']=net_paramsEnc['block_configs'][-1][-1]
-    
+
     return net_paramsEnc,net_paramsDec,inputmodule_paramsDec
 
 
@@ -87,14 +92,14 @@ batch_size = 16
 
 
 
-
+pathDir = "./reduced"
 
 
 #### 1. LOAD DATA
 # 1.1 Patient Diagnosis
-x, y = loadCropped(pathDir, 2)
+x, y = loadCropped(os.listdir(pathDir), 2)
 
-dataset = Standard_Dataset(X=x, Y=y)
+dataset = Standard_Dataset(X=x, Y=x)
 
 dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
 
@@ -134,6 +139,7 @@ train_loader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
 
 ###### CONFIG1
 Config='1'
+net_paramsEnc,net_paramsDec,inputmodule_paramsDec = AEConfigs(Config)
 model=AutoEncoderCNN(inputmodule_paramsEnc, net_paramsEnc,
                      inputmodule_paramsDec, net_paramsDec)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -141,25 +147,25 @@ model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # 4.2 Model Training
+running_loss = 0.0
 for epoch in range(num_epochs):
-    model.train()
-    running_loss = 0.0
-    for batch in train_loader:
-        batch = batch.to(device)
-        
-        # Forward pass
-        outputs = model(batch)
-        loss = criterion(outputs, batch)
-        
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        running_loss += loss.item()
-    
-    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss / len(train_loader)}")
+        for inputs, _ in dataloader: 
+            inputs = inputs.to(device)
 
+            # Forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, inputs)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+
+        # Logging epoch loss
+        epoch_loss = running_loss / len(dataloader)
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
 
 # Free GPU Memory After Training
@@ -173,7 +179,7 @@ gc.collect()
 torch.cuda.empty_cache()
 gc.collect()
 
-## 5.2 RedMetrics Threshold 
+## 5.2 RedMetrics Threshold
 
 ### 6. DIAGNOSIS CROSSVALIDATION
 ### 6.1 Load Patches 4 CrossValidation of Diagnosis

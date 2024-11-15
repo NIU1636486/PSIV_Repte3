@@ -10,36 +10,34 @@ import numpy as np
 import random
 import cv2
 import pandas as pd
+
+
+
 def loadCropped(ListFolders, nImages):
-    pathExcel = "PatientDiagnosis.csv"
-    patientsImgs = list()
-    patientsMeta= []
-    excel = pd.read_csv(pathExcel)
-    for pathDir in ListFolders:
-        imgs = glob.glob(os.path.join(pathDir,'*.png'))
-        n = len(imgs)
-        for _ in range(nImages):
-            index = random.randint(0,n-1)
-            img = cv2.imread(imgs[index])
-            diagnosis = excel.loc[excel['CODI'] == pathDir[:-2], 'DENSITAT'].values[0]
+	pathExcel = "/fhome/maed/HelicoDataSet/PatientDiagnosis.csv"
+	patientsImgs = list()
+	patientsMeta= []
+	excel = pd.read_csv(pathExcel)
+	print(excel)
+	for pathDir in ListFolders:
+		pathdir_llarg = os.path.join("/fhome/maed/HelicoDataSet/Cropped/", pathDir)
+		imgs = os.path.join(pathdir_llarg,'*.png')
+		imgs = glob.glob(imgs)
+		n = len(imgs)
+		for _ in range(nImages):
+			index = random.randint(0,n-1)
+			img = cv2.imread(imgs[index])
+			diagnosis = excel.loc[excel['CODI'] == pathDir[:-2], 'DENSITAT'].values[0]
 
-            if diagnosis == "NEGATIVA":
-                diagnosis = -1
-            elif diagnosis == "BAIXA" or diagnosis == "ALTA":
-                diagnosis = 1
-            patientsMeta.append([pathDir[:-2],imgs[index],diagnosis])
-            patientsImgs.append(img)
-    
-    return patientsImgs, patientsMeta
+			if diagnosis == "NEGATIVA":
+				diagnosis = -1
+			elif diagnosis == "BAIXA" or diagnosis == "ALTA":
+				diagnosis = 1
+			patientsMeta.append([pathDir[:-2],imgs[index],diagnosis])
+	 		# transpose img
+			img = np.transpose(img, (2, 0, 1))
+			patientsImgs.append(img)
 
-
-# Directori Actual
-directorio_actual = os.getcwd()
-
-# Llistar les carpetes del directori actual
-carpetas = [nombre for nombre in os.listdir(directorio_actual) if os.path.isdir(os.path.join(directorio_actual, nombre))]
-
-patientsImgs, patientsMeta = loadCropped(carpetas,20)
-
+	return patientsImgs, patientsMeta
     
     

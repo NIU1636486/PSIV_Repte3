@@ -29,11 +29,26 @@ from torch.utils.data import DataLoader
 import gc
 import torch
 
+import wandb
+
 
 ## Own Functions
 from Models.AEmodels import AutoEncoderCNN
 
 from loadCropped import loadCropped
+
+
+wandb.login(key="")
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="PSIV 3",
+
+    # track hyperparameters and run metadata
+    config={
+    "epochs": 10,
+    }
+)
 
 
 net_paramsEnc = {"drop_rate": 0}
@@ -92,14 +107,14 @@ batch_size = 16
 
 
 
-pathDir = "./reduced"
+pathDir_servidor = "/fhome/maed/HelicoDataSet/Cropped"
 
 
 #### 1. LOAD DATA
 # 1.1 Patient Diagnosis
-x, y = loadCropped(os.listdir(pathDir), 2)
+x, y = loadCropped(os.listdir(pathDir_servidor), 200)
 
-dataset = Standard_Dataset(X=x, Y=x)
+dataset = Standard_Dataset(X=x, Y=y)
 
 dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
 
@@ -164,6 +179,7 @@ for epoch in range(num_epochs):
             running_loss += loss.item()
 
         epoch_loss = running_loss / len(dataloader)
+        wandb.log({"loss": epoch_loss})
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
 
@@ -190,3 +206,4 @@ gc.collect()
 
 ### 6.2 Diagnostic Power
 
+wandb.finish()

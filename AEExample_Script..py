@@ -163,9 +163,13 @@ for epoch in range(num_epochs):
 
             running_loss += loss.item()
 
-        # Logging epoch loss
         epoch_loss = running_loss / len(dataloader)
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
+
+
+model = model.to('cpu')
+torch.save(model.state_dict(), './model.pth')
+
 
 
 # Free GPU Memory After Training

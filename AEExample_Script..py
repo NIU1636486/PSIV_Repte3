@@ -32,6 +32,7 @@ import torch
 import wandb
 
 
+
 ## Own Functions
 from Models.AEmodels import AutoEncoderCNN
 
@@ -98,7 +99,7 @@ net_paramsEnc,net_paramsDec,inputmodule_paramsDec = AEConfigs('1')
 criterion = nn.MSELoss()  # Reconstruction loss for AutoEncoder
 num_epochs = 50
 learning_rate = 1e-3
-batch_size = 16
+batch_size = 512
 
 
 

@@ -125,6 +125,7 @@ model.load_state_dict(torch.load('model_rapid_nou.pth'))
 model.eval()  # Set the model to evaluation mode
 
 # Step 2: Define transformations and initialize variables
+# Define the transform (ToTensor will normalize the image)
 transform = transforms.Compose([transforms.ToTensor()])
 errors = []  # List to store reconstruction errors
 labels = []  # List to store true labels
@@ -141,10 +142,13 @@ for input_image, metadata in zip(patientsImgs, patientsMeta):
     pat_id, img_window_id, label = metadata
 
     input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)  # Convert to RGB format
-    input_image = input_image.astype(np.float32) / 255.0  # Normalize to [0, 1]
+    input_image = input_image.astype(np.float32) / 255.0  # Convert the image to float32 and normalize to [0, 1]
 
+    # Convert image to a PIL Image (needed for transforms)
+    input_image_pil = Image.fromarray((input_image * 255).astype(np.uint8))
+    
     # Transform image to tensor
-    input_tensor = transform(input_image).unsqueeze(0)  # Add batch dimension
+    input_tensor = transform(input_image_pil).unsqueeze(0)  # Add batch dimension
 
     # Pass the image through the model
     with torch.no_grad():
@@ -154,8 +158,15 @@ for input_image, metadata in zip(patientsImgs, patientsMeta):
     output_image = output_tensor.squeeze(0).detach().cpu().numpy()  # Remove batch dimension
     output_image = np.transpose(output_image, (1, 2, 0))  # Convert to HWC format
 
+    # Convert images back to [0, 255] range\n")
+    input_image_corrected = (input_image * 255).astype(np.uint8)
+    output_image_corrected = (output_image * 255).astype(np.uint8)
+    # Convert to BGR format as expected by OpenCV\n")
+    input_image_bgr = cv2.cvtColor(input_image_corrected, cv2.COLOR_RGB2BGR)
+    output_image_bgr = cv2.cvtColor(output_image_corrected, cv2.COLOR_RGB2BGR)
+    
     # Compute F_red
-    f_red = calculate_f_red(input_image, output_image, threshold_low=-20, threshold_high=20)
+    f_red = calculate_f_red(input_image_bgr, output_image_bgr, threshold_low=-20, threshold_high=20)
     print(f"F_red: {f_red}")
 
     # Collect errors and labels for ROC analysis
@@ -176,5 +187,3 @@ plt.title("ROC Curve")
 plt.legend()
 plt.show()
 
-#print(errors)
-#print(labels)

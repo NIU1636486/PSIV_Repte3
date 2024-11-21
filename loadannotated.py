@@ -13,7 +13,8 @@ import re
 #ON EL FILENAME ËS WINDOW_ID. 
 
 def loadAnnotated(ListFolders, nImages):
-    pathExcel = "/Users/carlotacortes/Desktop/HP_WSI-CoordAllAnnotatedPatches.xlsx"
+    directori = os.getcwd()
+    pathExcel = os.path.join(directori, "HP_WSI-CoordAllAnnotatedPatches.xlsx")
     excel = pd.read_excel(pathExcel)
     # AGAFAR WINDOW ID EXCEL
     excel['Window_ID'] = excel['Window_ID'].astype(str).str.strip()
@@ -32,12 +33,15 @@ def loadAnnotated(ListFolders, nImages):
         # de la carpeta aconseguir totes les imatges
         imgs = glob.glob(os.path.join(pathDir, '*.png'))
         n = len(imgs)
-
+        
         for _ in range(nImages):
             # seleccionar una imatge de manera random
             index = random.randint(0, n-1)
             img_path = imgs[index]
             img = cv2.imread(img_path)
+            
+            # Resize image to 256x256
+            img = cv2.resize(img, (256, 256))
 
             # extreure filename sense el .png per fer match amb Window_ID del excel
             # Extract filename without extension using os.path.splitext
@@ -62,11 +66,11 @@ def loadAnnotated(ListFolders, nImages):
 
     return annotatedImgs, annotatedtMeta
 
-ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
+#ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
 
-patientsImgs, patientsMeta  = loadAnnotated(ListFolders, nImages=2)
+#patientsImgs, patientsMeta  = loadAnnotated(ListFolders, nImages=2)
 
 # Print the results for verification
-for img, metadata in zip(patientsImgs, patientsMeta):
+#for img, metadata in zip(patientsImgs, patientsMeta):
     #print(img)
-    print("Metadata:", metadata)
+#    print("Metadata:", metadata)

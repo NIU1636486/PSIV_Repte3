@@ -2,6 +2,9 @@ import numpy as np
 import cv2
 from sklearn.metrics import roc_curve
 
+
+import matplotlib.pyplot as plt
+
 # Entrenar autoencoder i fer-ho servir per reconstruct imatges del annotated dataset
 #per cada annotated image, calcular la pixel-wise reconstruction error = Fred i guardar valor amb el seu true label pel ROC
 
@@ -15,6 +18,7 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
     #convertir imatges a HSV i extreure HUE channel
     original_hue = cv2.cvtColor(original_img, cv2.COLOR_BGR2HSV)[:, :, 0]
     reconstructed_hue = cv2.cvtColor(reconstructed_img, cv2.COLOR_BGR2HSV)[:, :, 0]
+
     
     # Convert hue range to 0-179 scale used in OpenCV
     # perque en OpenCV  el hue es represemtat en escala 0-179. Per map negative map values (-20) a valid range
@@ -28,12 +32,18 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
     else:
         original_red_pixels = np.sum((original_hue >= hue_low) | (original_hue <= hue_high))
         reconstructed_red_pixels = np.sum((reconstructed_hue >= hue_low) | (reconstructed_hue <= hue_high))
-
-    # evitar divisio entre 0
-    if reconstructed_red_pixels == 0:
-        return float('inf') if original_red_pixels > 0 else 0
-    #calcular fred
-    return original_red_pixels / reconstructed_red_pixels
+    
+    ## Avoid division by zero in case no red pixels exist in the original image
+    #return a default high value
+    #indicating no loss since there was no red to lose.
+    if original_red_pixels == 0:
+        return 0.0
+        
+    # Calculate the fraction of reddish pixels preserved
+    f_red = reconstructed_red_pixels / original_red_pixels
+    # Clamp the value to [0, 1] to avoid issues from small negative pixel counts due to noise
+    f_red = max(0.0, min(f_red, 1.0))
+    return f_red
 
 #funcio roc_threshold_analysis amb collected errors(fred) i labels per determinar optimal threshold (+ proper a 0,1)
 #apply aquest threshol durant test/evaluation per classificar patches
@@ -48,3 +58,4 @@ def roc_threshold_analysis(errors, labels):
     optimal_idx = np.argmin(distances)
     optimal_threshold = thresholds[optimal_idx]
     return optimal_threshold, fpr, tpr
+

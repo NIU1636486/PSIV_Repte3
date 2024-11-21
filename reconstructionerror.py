@@ -21,9 +21,13 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
     hue_low = (threshold_low + 180) % 180
     hue_high = (threshold_high + 180) % 180
     
-    # comptar pixels vermells 
-    original_red_pixels = np.sum((original_hue >= hue_low) & (original_hue <= hue_high))
-    reconstructed_red_pixels = np.sum((reconstructed_hue >= hue_low) & (reconstructed_hue <= hue_high))
+    # comptar pixels vermells, tractant el rang circular del Hue range
+    if hue_low < hue_high:
+        original_red_pixels = np.sum((original_hue >= hue_low) & (original_hue <= hue_high))
+        reconstructed_red_pixels = np.sum((reconstructed_hue >= hue_low) & (reconstructed_hue <= hue_high))
+    else:
+        original_red_pixels = np.sum((original_hue >= hue_low) | (original_hue <= hue_high))
+        reconstructed_red_pixels = np.sum((reconstructed_hue >= hue_low) | (reconstructed_hue <= hue_high))
 
     # evitar divisio entre 0
     if reconstructed_red_pixels == 0:
@@ -31,10 +35,8 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
     #calcular fred
     return original_red_pixels / reconstructed_red_pixels
 
-#funcio roc_threshold_analysis amb collected errors i labels per determinar optimal threshold
+#funcio roc_threshold_analysis amb collected errors(fred) i labels per determinar optimal threshold (+ proper a 0,1)
 #apply aquest threshol durant test/evaluation per classificar patches
-#pren una llista de reconstruction errors i les seves etiquetes corresponents
-#fa la ROC curve i selecciona el threshold optim- el més proper a (0,1) 
 def roc_threshold_analysis(errors, labels):
     #roc curve
     fpr, tpr, thresholds = roc_curve(labels, errors)

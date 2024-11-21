@@ -15,11 +15,8 @@ import re
 def loadAnnotated(ListFolders, nImages):
     pathExcel = "/Users/carlotacortes/Desktop/HP_WSI-CoordAllAnnotatedPatches.xlsx"
     excel = pd.read_excel(pathExcel)
-    # ELIMINAR SI WINDOW ID CONTE number_Aug???
-    excel = excel[~excel['Window_ID'].astype(str).str.contains('_Aug', regex=False)]
-    # nomes numerics i passar-los a integer per no llegir-los com a float
-    excel = excel[excel['Window_ID'].apply(lambda x: str(x).isdigit())]
-    excel['Window_ID'] = excel['Window_ID'].astype(int)
+    # AGAFAR WINDOW ID EXCEL
+    excel['Window_ID'] = excel['Window_ID'].astype(str).str.strip()
     
     annotatedImgs = []
     annotatedtMeta= []
@@ -43,18 +40,17 @@ def loadAnnotated(ListFolders, nImages):
             img = cv2.imread(img_path)
 
             # extreure filename sense el .png per fer match amb Window_ID del excel
-            img_filename = os.path.basename(img_path).replace('.png', '')
-            
-            # Use regex to extract only the numeric part of the filename (Window_ID)
-            match = re.match(r"(\d+)", img_filename)
+            # Extract filename without extension using os.path.splitext
+            img_filename = os.path.splitext(os.path.basename(img_path))[0]
 
-            # Convert the numeric part to an integer
-            img_window_id = int(match.group(1))
+            # Match filename with Window_ID in Excel (Remove leading zeros)
+            img_filename_cleaned = re.sub(r'^0+', '', img_filename.strip())
+            
             
             # fer match Window_ID amb folder data
-            presence_row = folder_data[folder_data['Window_ID'] == img_window_id]
+            presence_row = folder_data[folder_data['Window_ID'] == img_filename_cleaned]
             if presence_row.empty:
-                print(f"No matching Window_ID for image '{img_filename}.png' in Excel data. Skipping.")
+                print(f"No matching Window_ID for image '{img_filename_cleaned}' in Excel data. Skipping.")
                 continue
             
             #extreure valor presence
@@ -62,7 +58,7 @@ def loadAnnotated(ListFolders, nImages):
 
             #afegir a les dues llistes
             annotatedImgs.append(img)
-            annotatedtMeta.append([pat_id, img_window_id, presence])
+            annotatedtMeta.append([pat_id, img_filename_cleaned, presence])
 
     return annotatedImgs, annotatedtMeta
 
@@ -71,6 +67,6 @@ ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
 patientsImgs, patientsMeta  = loadAnnotated(ListFolders, nImages=2)
 
 # Print the results for verification
-#for img, metadata in zip(patientsImgs, patientsMeta):
+for img, metadata in zip(patientsImgs, patientsMeta):
     #print(img)
-    #print("Metadata:", metadata)
+    print("Metadata:", metadata)

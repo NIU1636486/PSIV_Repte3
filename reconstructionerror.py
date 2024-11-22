@@ -18,7 +18,6 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
     #convertir imatges a HSV i extreure HUE channel
     original_hue = cv2.cvtColor(original_img, cv2.COLOR_BGR2HSV)[:, :, 0]
     reconstructed_hue = cv2.cvtColor(reconstructed_img, cv2.COLOR_BGR2HSV)[:, :, 0]
-
     
     # Convert hue range to 0-179 scale used in OpenCV
     # perque en OpenCV  el hue es represemtat en escala 0-179. Per map negative map values (-20) a valid range
@@ -41,15 +40,15 @@ def calculate_f_red(original_img, reconstructed_img, threshold_low=-20, threshol
         
     # Calculate the fraction of reddish pixels preserved
     f_red = reconstructed_red_pixels / original_red_pixels
-    # Clamp the value to [0, 1] to avoid issues from small negative pixel counts due to noise
-    f_red = max(0.0, min(f_red, 1.0))
     return f_red
 
 #funcio roc_threshold_analysis amb collected errors(fred) i labels per determinar optimal threshold (+ proper a 0,1)
 #apply aquest threshol durant test/evaluation per classificar patches
 def roc_threshold_analysis(errors, labels):
+    binary_labels = np.array([1 if lbl == 1 else 0 for lbl in labels])  # Map -1 to 0 and 1 to 1
+    #Ambiguous Labels (0): Excluded from the analysis to avoid contaminating the ROC curve.
     #roc curve
-    fpr, tpr, thresholds = roc_curve(labels, errors)
+    fpr, tpr, thresholds = roc_curve(binary_labels, errors)
     
     #distancies al punt (0,1)
     distances = np.sqrt((fpr - 0)**2 + (1 - tpr)**2)

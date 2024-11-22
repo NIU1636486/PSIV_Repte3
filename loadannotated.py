@@ -32,11 +32,14 @@ def loadAnnotated(ListFolders, nImages):
         
         # de la carpeta aconseguir totes les imatges
         imgs = glob.glob(os.path.join(pathDir, '*.png'))
-        n = len(imgs)
-        
-        for _ in range(nImages):
-            # seleccionar una imatge de manera random
-            index = random.randint(0, n-1)
+        list_index = list(range(len(imgs)))
+        i = 0
+        while i <= nImages and list_index:
+            # seleccionar un index de manera random
+            index = random.choice(list_index)
+            list_index.remove(index)
+            
+            # seleccionar imatge
             img_path = imgs[index]
             img = cv2.imread(img_path)
             
@@ -63,14 +66,16 @@ def loadAnnotated(ListFolders, nImages):
             #afegir a les dues llistes
             annotatedImgs.append(img)
             annotatedtMeta.append([pat_id, img_filename_cleaned, presence])
+            
+            i += 1
 
     return annotatedImgs, annotatedtMeta
 
-#ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
+#ListFolders = glob.glob("Annotated/*")
 
 #patientsImgs, patientsMeta  = loadAnnotated(ListFolders, nImages=2)
 
 # Print the results for verification
 #for img, metadata in zip(patientsImgs, patientsMeta):
     #print(img)
-#    print("Metadata:", metadata)
+    #print("Metadata:", metadata)

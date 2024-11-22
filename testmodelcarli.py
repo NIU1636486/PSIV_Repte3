@@ -121,7 +121,7 @@ from sklearn.metrics import roc_curve
 net_paramsEnc, net_paramsDec, inputmodule_paramsDec = AEConfigs(Config)
 model = AutoEncoderCNN(inputmodule_paramsEnc, net_paramsEnc,
                        inputmodule_paramsDec, net_paramsDec)
-model.load_state_dict(torch.load('model_rapid_nou.pth'))
+model.load_state_dict(torch.load('model_rapid_v2.pth'))
 model.eval()  # Set the model to evaluation mode
 
 # Step 2: Define transformations and initialize variables
@@ -158,12 +158,9 @@ for input_image, metadata in zip(patientsImgs, patientsMeta):
     output_image = output_tensor.squeeze(0).detach().cpu().numpy()  # Remove batch dimension
     output_image = np.transpose(output_image, (1, 2, 0))  # Convert to HWC format
 
-    # Convert images back to [0, 255] range\n")
-    input_image_corrected = (input_image * 255).astype(np.uint8)
-    output_image_corrected = (output_image * 255).astype(np.uint8)
     # Convert to BGR format as expected by OpenCV\n")
-    input_image_bgr = cv2.cvtColor(input_image_corrected, cv2.COLOR_RGB2BGR)
-    output_image_bgr = cv2.cvtColor(output_image_corrected, cv2.COLOR_RGB2BGR)
+    input_image_bgr = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
+    output_image_bgr = cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
     
     # Compute F_red
     f_red = calculate_f_red(input_image_bgr, output_image_bgr, threshold_low=-20, threshold_high=20)

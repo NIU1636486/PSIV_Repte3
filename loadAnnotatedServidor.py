@@ -43,6 +43,7 @@ def loadAnnotated(ListFolders, nImg):
         
         pathdir_llarg = os.path.join("/fhome/maed/HelicoDataSet/CrossValidation/Annotated/", pathDir)
         
+        
         pathimgs = os.path.join(pathdir_llarg,'*.png')
         imgs = glob.glob(pathimgs)
         n = len(imgs)
@@ -50,14 +51,19 @@ def loadAnnotated(ListFolders, nImg):
         if nImg is None:
             nImages = n
 
-        for i in range(min(nImages, n)):
-            # seleccionar una imatge de manera random
-        
-            img_path = imgs[i]
-            img = cv2.imread(img_path)
+        this_patient = 0
+        while this_patient < min(nImages, n):
+            print(len(imgs))
+            if len(imgs) == 0:
+                break
+            
+            index = random.randint(0,len(imgs)-1)
+            imgname = imgs.pop(index)
+            print(imgname)
+            img = cv2.imread(imgname)
 
             # extreure filename sense el .png per fer match amb Window_ID del excel
-            img_filename = os.path.basename(img_path).replace('.png', '')
+            img_filename = os.path.basename(imgname).replace('.png', '')
             
             # Use regex to extract only the numeric part of the filename (Window_ID)
             match = re.match(r"(\d+)", img_filename)
@@ -74,15 +80,16 @@ def loadAnnotated(ListFolders, nImg):
             presence_row = folder_data[folder_data['Window_ID'] == img_window_id]
             if presence_row.empty:
                 print(f"No matching Window_ID for image '{img_filename}.png' in Excel data. Skipping.")
-                continue
-            
-            #extreure valor presence
-            presence = presence_row['Presence'].values[0]
+                presence = -1
+            else:
+                #extreure valor presence
+                presence = presence_row['Presence'].values[0]
             if presence != 0:
                 #afegir a les dues llistes
                 annotatedImgs.append(img)
                 annotatedtMeta.append([pat_id, img_window_id, presence])
-
+                this_patient +=1
+    print("Dades anotated dins")
     return annotatedImgs, annotatedtMeta
 
 #ListFolders = glob.glob("/Users/carlotacortes/Desktop/Annotated/*")
